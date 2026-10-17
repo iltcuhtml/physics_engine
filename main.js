@@ -152,12 +152,17 @@ function main(timestamp) {
     render(ratio);
 }
 
+/*
 createCircle(1.0, 5, 5, 2.5, 1.2, 0, 0, 0.8);
 createCircle(1.5, 10, 8, -1.8, 2.1, 0, 0, 1.2);
 createCircle(0.7, 15, 6, 0.5, -2.4, 0, 0, 0.6);
 createCircle(2.0, 8, 12, 1.2, -1.1, 0, 0, 1.5);
 createCircle(1.2, 13, 10, -2.2, -1.5, 0, 0, 0.9);
 createCircle(0.9, 18, 13, -1.0, 1.8, 0, 0, 0.7);
+*/
+
+createCircle(1, 1, 1, 5, 10, 5, -5, 1);
+createCircle(1, 24.6, 1, 10, 5, -5, 5, 1);
 
 resize();
 requestAnimationFrame(main);
