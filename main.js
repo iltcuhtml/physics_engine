@@ -35,6 +35,58 @@ class circle {
         this.y += this.vy * dt;
     }
 
+    resolveWalls() {
+        if (!wall_collision) return;
+
+        if (this.x < this.r) {
+            this.x = this.r;
+            this.vx = Math.abs(this.vx) * (eps + 1) / 2;
+        } else if (this.x + this.r > WORLD_W) {
+            this.x = WORLD_W - this.r;
+            this.vx = -Math.abs(this.vx) * (eps + 1) / 2;
+        }
+
+        if (this.y < this.r) {
+            this.y = this.r;
+            this.vy = Math.abs(this.vy) * (eps + 1) / 2;
+        } else if (this.y + this.r > WORLD_H) {
+            this.y = WORLD_H - this.r;
+            this.vy = -Math.abs(this.vy) * (eps + 1) / 2;
+        }
+    }
+
+    resolveCollision(index) {
+        for (let i = index + 1; i < circles.length; i++) {
+            const m1 = circles_copy[index].m, m2 = circles_copy[i].m;
+            const vx1 = circles_copy[index].vx, vx2 = circles_copy[i].vx;
+            const vy1 = circles_copy[index].vy, vy2 = circles_copy[i].vy;
+
+            const dx = Math.abs(circles_copy[index].x - circles_copy[i].x);
+            const dy = Math.abs(circles_copy[index].y - circles_copy[i].y);
+            const d = Math.hypot(dx, dy);
+
+            const l = circles_copy[index].r + circles_copy[i].r - d;
+
+            if (l <= 0 || d === 0) continue;
+
+            if (vx1 !== vx2) {
+                this.x -= l * (dx / d) * (vx1 / Math.abs(vx2 - vx1));
+                circles[i].x -= l * (dx / d) * (vx2 / Math.abs(vx2 - vx1));
+
+                this.vx = ((m1 - m2 * eps) * vx1 + (m2 + m2 * eps) * vx2) / (m1 + m2);
+                circles[i].vx = ((m1 + m1 * eps) * vx1 + (m2 - m1 * eps) * vx2) / (m1 + m2);
+            }
+
+            if (vy1 !== vy2) {
+                this.y -= l * (dy / d) * (vy1 / Math.abs(vy2 - vy1));
+                circles[i].y -= l * (dy / d) * (vy2 / Math.abs(vy2 - vy1));
+
+                this.vy = ((m1 - m2 * eps) * vy1 + (m2 + m2 * eps) * vy2) / (m1 + m2);
+                circles[i].vy = ((m1 + m1 * eps) * vy1 + (m2 - m1 * eps) * vy2) / (m1 + m2);
+            }
+        }
+    }
+    
     render(index, ratio) {
         ctx.beginPath();
         ctx.arc(this.x * ratio, canvas.height - this.y * ratio, this.r * ratio, 0, 2 * Math.PI);
@@ -52,7 +104,7 @@ class circle {
     }
 }
 
-let circles = [];
+let circles = [], circles_copy = [];
 
 function createCircle(m = 1, x = 1, y = 1, vx = 0, vy = 0, ax = 0, ay = 0, r = 1) {
     let c = new circle(m, x, y, vx, vy, ax, ay, r);
@@ -60,48 +112,14 @@ function createCircle(m = 1, x = 1, y = 1, vx = 0, vy = 0, ax = 0, ay = 0, r = 1
     circles.push(c);
 }
 
-function resolveCircleCollision(a, b) {
-    const dx = Math.abs(a.x - b.x);
-    const dy = Math.abs(a.y - b.y);
-    const d = Math.hypot(dx, dy);
-    const l = a.r + b.r - d;
-
-    if (l <= 0 || d === 0) return;
-
-    if (a.vx !== b.vx) {
-        a.x -= l * (dx / d) * (a.vx / Math.abs(a.vx - b.vx));
-        b.x -= l * (dx / d) * (b.vx / Math.abs(a.vx - b.vx));
-
-        a.vx = ((a.m - b.m * eps) * a.vx + (b.m + b.m * eps) * b.vx) / (a.m + b.m);
-        b.vx = ((a.m + a.m * eps) * a.vx + (b.m - a.m * eps) * b.vx) / (a.m + b.m);
-    }
-
-    if (a.vy !== b.vy) {
-        a.y -= l * (dy / d) * (a.vy / Math.abs(a.vy - b.vy));
-        b.y -= l * (dy / d) * (b.vy / Math.abs(a.vy - b.vy));
-
-        a.vy = ((a.m - b.m * eps) * a.vy + (b.m + b.m * eps) * b.vy) / (a.m + b.m);
-        b.vy = ((a.m + a.m * eps) * a.vy + (b.m - a.m * eps) * b.vy) / (a.m + b.m);
-    }
-}
-
-function resolveCircleWalls(c) {
-    if (!wall_collision) return;
-
-    if (c.x < c.r)                { c.x = c.r;           c.vx =  Math.abs(c.vx) * (eps + 1) / 2; }
-    else if (c.x + c.r > WORLD_W) { c.x = WORLD_W - c.r; c.vx = -Math.abs(c.vx) * (eps + 1) / 2; }
-
-    if (c.y < c.r)                { c.y = c.r;           c.vy =  Math.abs(c.vy) * (eps + 1) / 2; }
-    else if (c.y + c.r > WORLD_H) { c.y = WORLD_H - c.r; c.vy = -Math.abs(c.vy) * (eps + 1) / 2; }
-}
-
 function updatePhysics(dt) {
     for (const c of circles) c.updatePhysics(dt);
-    for (const c of circles) resolveCircleWalls(c);
+    for (const c of circles) c.resolveWalls();
+
+    circles_copy = [...circles];
 
     for (let i = 0; i < circles.length; i++)
-        for (let j = i + 1; j < circles.length; j++)
-            resolveCircleCollision(circles[i], circles[j]);
+        circles[i].resolveCollision(i);
 }
 
 function render(ratio) {
