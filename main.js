@@ -10,6 +10,8 @@ let ratio = 100;
 
 let eps = 1;
 
+let wall_collision = true;
+
 class circle {
     constructor(m, x, y, vx, vy, ax, ay, r) {
         this.m = m;
@@ -33,17 +35,35 @@ class circle {
     }
 
     updateCollisions(index) {
-        for (let i = index + 1; i < circles.length; i++) {
-            const m1 = circles[index].m, m2 = circles[i].m;
-            const vx1 = circles[index].vx, vx2 = circles[i].vx;
-            const vy1 = circles[index].vy, vy2 = circles[i].vy;
+        for (let i = index; i < circles.length; i++) {
+            const m1 = this.m, m2 = circles[i].m;
+            const vx1 = this.vx, vx2 = circles[i].vx;
+            const vy1 = this.vy, vy2 = circles[i].vy;
 
-            const dx = Math.abs(circles[i].x - circles[index].x);
-            const dy = Math.abs(circles[i].y - circles[index].y);
+            const dx = Math.abs(this.x - circles[i].x);
+            const dy = Math.abs(this.y - circles[i].y);
             const d = Math.sqrt(dx ** 2 + dy ** 2);
-            const l = circles[index].r + circles[i].r - d;
+            const l = this.r + circles[i].r - d;
 
-            if (l > 0) {
+            if ((i === index) & wall_collision) {
+                if (this.x - this.r < 0) {
+                    this.x = this.r;
+                    this.vx = -this.vx * (1 + eps) / 2;
+                } else if (this.x + this.r > 25.6) {
+                    this.x = 25.6 - this.r;
+                    this.vx = -this.vx * (1 + eps) / 2;
+                }
+
+                if (this.y - this.r < 0) {
+                    this.y = this.r;
+                    this.vy = -this.vy * (1 + eps) / 2;
+                } else if (this.y + this.r > 14.4) {
+                    this.y = 14.4 - this.r;
+                    this.vy = -this.vy * (1 + eps) / 2;
+                }
+            }
+
+            if ((i !== index) & (l > 0)) {
                 if (d === 0) {
                     console.log("Collision detected with zero distance between circles");
 
@@ -51,18 +71,18 @@ class circle {
                 }
 
                 if (vx1 !== vx2) {
-                    circles[index].x -= l * (dx / d) * (vx1 / Math.abs(vx2 - vx1));
+                    this.x -= l * (dx / d) * (vx1 / Math.abs(vx2 - vx1));
                     circles[i].x -= l * (dx / d) * (vx2 / Math.abs(vx2 - vx1));
 
-                    circles[index].vx = ((m1 - m2 * eps) * vx1 + (m2 + m2 * eps) * vx2) / (m1 + m2);
+                    this.vx = ((m1 - m2 * eps) * vx1 + (m2 + m2 * eps) * vx2) / (m1 + m2);
                     circles[i].vx = ((m1 + m1 * eps) * vx1 + (m2 - m1 * eps) * vx2) / (m1 + m2);
                 }
 
                 if (vy1 !== vy2) {
-                    circles[index].y -= l * (dy / d) * (vy1 / Math.abs(vy2 - vy1));
+                    this.y -= l * (dy / d) * (vy1 / Math.abs(vy2 - vy1));
                     circles[i].y -= l * (dy / d) * (vy2 / Math.abs(vy2 - vy1));
 
-                    circles[index].vy = ((m1 - m2 * eps) * vy1 + (m2 + m2 * eps) * vy2) / (m1 + m2);
+                    this.vy = ((m1 - m2 * eps) * vy1 + (m2 + m2 * eps) * vy2) / (m1 + m2);
                     circles[i].vy = ((m1 + m1 * eps) * vy1 + (m2 - m1 * eps) * vy2) / (m1 + m2);
                 }
             }
@@ -87,12 +107,12 @@ class circle {
         ctx.font = `${ratio}px Arial`;
         ctx.fillStyle = 'red';
         ctx.fillText(index, this.x * ratio - ratio * 0.275, canvas.height - this.y * ratio + ratio * 0.275);
-        ctx.fillText(`vx: ${this.vx.toFixed(2)}`, this.x * ratio - ratio * 1.75, canvas.height - this.y * ratio - ratio * 2.5);
-        ctx.fillText(`vy: ${this.vy.toFixed(2)}`, this.x * ratio - ratio * 1.75, canvas.height - this.y * ratio - ratio * 1.5);
+        //ctx.fillText(`vx: ${this.vx.toFixed(2)}`, this.x * ratio - ratio * 1.75, canvas.height - this.y * ratio - ratio * 2.5);
+        //ctx.fillText(`vy: ${this.vy.toFixed(2)}`, this.x * ratio - ratio * 1.75, canvas.height - this.y * ratio - ratio * 1.5);
     }
 }
 
-let circles = [], circles_copy = [];
+let circles = [];
 
 function createCircle(m = 1, x = 1, y = 1, vx = 0, vy = 0, ax = 0, ay = 0, r = 1) {
     let c = new circle(m, x, y, vx, vy, ax, ay, r);
@@ -143,8 +163,12 @@ function main(timestamp) {
 
     render(ratio);
 }
-createCircle(1, 2, 7.2, 3, 0, 0, 0, 1);
-createCircle(1, 10, 7.2, 0, 0, 0, 0, 1);
-createCircle(1, 16, 7.2, -2, 0, 0, 0, 1);
+
+createCircle(1.0, 5, 5, 2.5, 1.2, 0, 0, 0.8);
+createCircle(1.5, 10, 8, -1.8, 2.1, 0, 0, 1.2);
+createCircle(0.7, 15, 6, 0.5, -2.4, 0, 0, 0.6);
+createCircle(2.0, 8, 12, 1.2, -1.1, 0, 0, 1.5);
+createCircle(1.2, 13, 10, -2.2, -1.5, 0, 0, 0.9);
+createCircle(0.9, 18, 14, -1.0, 1.8, 0, 0, 0.7);
 
 requestAnimationFrame(main);
