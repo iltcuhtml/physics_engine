@@ -8,6 +8,8 @@ let canvas = document.getElementById("canvas"); // 25.6m x 14.4m
 let ctx = canvas.getContext("2d");
 let ratio = 100;
 
+let eps = 1;
+
 class circle {
     constructor(m, x, y, vx, vy, ax, ay, r) {
         this.m = m;
@@ -32,11 +34,14 @@ class circle {
 
     updateCollisions(index) {
         for (let i = index + 1; i < circles.length; i++) {
-            let dx = Math.abs(this.x - circles[i].x);
-            let dy = Math.abs(this.y - circles[i].y);
+            const m1 = circles[index].m, m2 = circles[i].m;
+            const vx1 = circles[index].vx, vx2 = circles[i].vx;
+            const vy1 = circles[index].vy, vy2 = circles[i].vy;
 
-            let d = Math.sqrt(dx ** 2 + dy ** 2);
-            let l = this.r + circles[i].r - d;
+            const dx = Math.abs(circles[i].x - circles[index].x);
+            const dy = Math.abs(circles[i].y - circles[index].y);
+            const d = Math.sqrt(dx ** 2 + dy ** 2);
+            const l = circles[index].r + circles[i].r - d;
 
             if (l > 0) {
                 if (d === 0) {
@@ -45,14 +50,20 @@ class circle {
                     continue;
                 }
 
-                if (this.vx !== circles[i].vx) {
-                    this.x -= l * (dx / d) * (this.vx / Math.abs(this.vx - circles[i].vx));
-                    circles[i].x -= l * (dx / d) * (circles[i].vx / Math.abs(this.vx - circles[i].vx));
+                if (vx1 !== vx2) {
+                    circles[index].x -= l * (dx / d) * (vx1 / Math.abs(vx2 - vx1));
+                    circles[i].x -= l * (dx / d) * (vx2 / Math.abs(vx2 - vx1));
+
+                    circles[index].vx = ((m1 - m2 * eps) * vx1 + (m2 + m2 * eps) * vx2) / (m1 + m2);
+                    circles[i].vx = ((m1 + m1 * eps) * vx1 + (m2 - m1 * eps) * vx2) / (m1 + m2);
                 }
 
-                if (this.vy !== circles[i].vy) {
-                    this.y += l * (dy / d) * (this.vy / Math.abs(this.vy - circles[i].vy));
-                    circles[i].y += l * (dy / d) * (circles[i].vy / Math.abs(this.vy - circles[i].vy));
+                if (vy1 !== vy2) {
+                    circles[index].y -= l * (dy / d) * (vy1 / Math.abs(vy2 - vy1));
+                    circles[i].y -= l * (dy / d) * (vy2 / Math.abs(vy2 - vy1));
+
+                    circles[index].vy = ((m1 - m2 * eps) * vy1 + (m2 + m2 * eps) * vy2) / (m1 + m2);
+                    circles[i].vy = ((m1 + m1 * eps) * vy1 + (m2 - m1 * eps) * vy2) / (m1 + m2);
                 }
             }
         }
@@ -81,7 +92,7 @@ class circle {
     }
 }
 
-let circles = [];
+let circles = [], circles_copy = [];
 
 function createCircle(m = 1, x = 1, y = 1, vx = 0, vy = 0, ax = 0, ay = 0, r = 1) {
     let c = new circle(m, x, y, vx, vy, ax, ay, r);
@@ -132,9 +143,8 @@ function main(timestamp) {
 
     render(ratio);
 }
-
-createCircle(1,    2, 3.6,    0, 19.6, 0, -9.8, 1);
-createCircle(1,    4, 3.6,  6.4, 19.6, 0, -9.8, 1);
-createCircle(1, 21.6, 3.6, -6.4, 19.6, 0, -9.8, 1);
+createCircle(1, 2, 7.2, 3, 0, 0, 0, 1);
+createCircle(1, 10, 7.2, 0, 0, 0, 0, 1);
+createCircle(1, 16, 7.2, -2, 0, 0, 0, 1);
 
 requestAnimationFrame(main);
