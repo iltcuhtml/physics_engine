@@ -11,7 +11,8 @@ let ratio = 100;
 
 let eps = 1;
 
-let wall_collision = true;
+let wall_collision = false;
+let collision = false;
 
 class circle {
     constructor(m, x, y, vx, vy, ax, ay, r) {
@@ -56,6 +57,8 @@ class circle {
     }
 
     resolveCollision(index) {
+        if (!collision) return;
+
         for (let i = index + 1; i < circles.length; i++) {
             const m1 = circles_copy[index].m, m2 = circles_copy[i].m;
             const vx1 = circles_copy[index].vx, vx2 = circles_copy[i].vx;
@@ -148,7 +151,7 @@ function main(timestamp) {
         accumulatedTime -= INTERVAL_DELAY;
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
     render(ratio);
 }
 
@@ -161,8 +164,11 @@ createCircle(1.2, 13, 10, -2.2, -1.5, 0, 0, 0.9);
 createCircle(0.9, 18, 13, -1.0, 1.8, 0, 0, 0.7);
 */
 
-createCircle(1, 1, 1, 5, 10, 5, -5, 1);
-createCircle(1, 24.6, 1, 10, 5, -5, 5, 1);
+//createCircle(1, 1, 1, 5, 10, 5, -5, 1);
+//createCircle(1, 24.6, 1, 10, 5, -5, 5, 1);
+
+createCircle(1, 6, 0, 2, 3, -1, -1, 0.5);
+createCircle(1, 24, -6, -1, 4, -1, -1, 0.5);
 
 resize();
 requestAnimationFrame(main);
